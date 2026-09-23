@@ -10,6 +10,8 @@ import Image from 'next/image';
 export interface HourForecastCardProps {
   /** Wind speed in km/h or mph */
   windSpeed: number;
+  /** Wind speed unit (defaults to 'km/h') */
+  windUnit?: string;
   /** ISO datetime or date string formatted as "YYYY-MM-DD HH:mm" */
   time: string;
   /** Condition summary and WeatherAPI icon URL */
@@ -47,6 +49,7 @@ export const initialProps: HourForecastCardProps = {
  */
 export default function HourForecastCard({
   windSpeed,
+  windUnit = 'km/h',
   time,
   condition: { text, icon },
   humidity,
@@ -55,7 +58,7 @@ export default function HourForecastCard({
   className = '',
 }: HourForecastCardProps) {
   const displayTime = isCurrentHour ? 'Now' : formatHour(time);
-  const cardAriaLabel = `${displayTime}: ${temp} degrees, ${text}. Humidity: ${humidity}%, Wind Speed: ${windSpeed} km/h.`;
+  const cardAriaLabel = `${displayTime}: ${temp} degrees, ${text}. Humidity: ${humidity}%, Wind Speed: ${windSpeed} ${windUnit}.`;
 
   return (
     <article
@@ -147,7 +150,7 @@ export default function HourForecastCard({
         </span>
         <span
           className="flex items-center gap-1"
-          title={`Wind: ${windSpeed} km/h`}
+          title={`Wind: ${windSpeed} ${windUnit}`}
         >
           <Image
             src={windIcon}
@@ -159,7 +162,7 @@ export default function HourForecastCard({
               isCurrentHour ? 'brightness-200' : 'text-teal-600'
             }`}
           />
-          {windSpeed}km/h
+          {windSpeed}{windUnit === 'km/h' ? 'km/h' : ' mph'}
         </span>
       </div>
     </article>

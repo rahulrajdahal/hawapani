@@ -94,6 +94,8 @@ export default function CityComparisonModal({
     };
   }, [isOpen, onClose]);
 
+  const weatherCacheRef = useRef<Record<string, IWeatherData>>({});
+
   // Synchronize initial cities when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -117,8 +119,8 @@ export default function CityComparisonModal({
       setLoading(true);
       try {
         const promises = selectedCities.map(async (city) => {
-          if (weatherMap[city]) {
-            return { city, data: weatherMap[city] };
+          if (weatherCacheRef.current[city]) {
+            return { city, data: weatherCacheRef.current[city] };
           }
           const response = await fetch(
             `/api/weather/forecast?q=${encodeURIComponent(city)}`
@@ -129,13 +131,12 @@ export default function CityComparisonModal({
 
         const results = await Promise.all(promises);
         if (!isCancelled) {
-          const newMap = { ...weatherMap };
           results.forEach(({ city, data }) => {
             if (data) {
-              newMap[city] = data;
+              weatherCacheRef.current[city] = data;
             }
           });
-          setWeatherMap(newMap);
+          setWeatherMap({ ...weatherCacheRef.current });
         }
       } catch {
         // Handle fetch errors gracefully
@@ -418,7 +419,9 @@ export default function CityComparisonModal({
                     <div className='flex justify-between text-slate-600'>
                       <span className='text-slate-400'>Wind Speed:</span>
                       <span className='font-semibold'>
-                        {current.wind_kph} km/h
+                        {isCelsius
+                          ? `${current.wind_kph} km/h`
+                          : `${current.wind_mph ?? Math.round(current.wind_kph * 0.621371 * 10) / 10} mph`}
                       </span>
                     </div>
 

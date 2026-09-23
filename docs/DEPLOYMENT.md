@@ -1,9 +1,11 @@
 # Deployment & CI/CD Strategy
 
 ## Platform: Vercel
-Vercel is the primary deployment target for HawaPani.
+
+Vercel is the primary deployment target for hawapani.
 
 ## Continuous Delivery Pipeline
+
 ```
 1. Feature Branch (git push)
         ↓
@@ -26,5 +28,6 @@ Vercel is the primary deployment target for HawaPani.
 ```
 
 ## Environment Variables Configuration
+
 - **Server Environment Variable**: `WEATHER_API_KEY` (configured in Vercel project settings).
 - **Public Environment Variables**: None required by default; never store API keys in `NEXT_PUBLIC_*`.

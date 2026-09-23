@@ -28,7 +28,7 @@ const securityHeaders = [
     },
     {
         key: "Content-Security-Policy",
-        value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://cdn.weatherapi.com; font-src 'self' data:; connect-src 'self' https://api.weatherapi.com https://cdn.weatherapi.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
+        value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://*.posthog.com https://us-assets.i.posthog.com https://eu-assets.i.posthog.com; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://cdn.weatherapi.com; font-src 'self' data:; connect-src 'self' https://api.weatherapi.com https://cdn.weatherapi.com https://*.posthog.com https://us.i.posthog.com https://eu.i.posthog.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
     },
 ];
 

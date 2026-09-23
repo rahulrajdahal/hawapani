@@ -98,6 +98,7 @@ export const weatherService = {
             temp_f: Number(h.temp_f ?? 0),
             humidity: Number(h.humidity ?? 0),
             wind_kph: Number(h.wind_kph ?? 0),
+            wind_mph: Number(h.wind_mph ?? 0),
             condition: {
               text: condition.text ?? '',
               icon: condition.icon ?? '',
@@ -172,6 +173,7 @@ export const weatherService = {
       temp_f: current.temp_f,
       humidity: current.humidity,
       wind_kph: current.wind_kph,
+      wind_mph: current.wind_mph,
       wind_dir: current.wind_dir,
       pressure_mb: current.pressure_mb,
       pressure_in: current.pressure_in,

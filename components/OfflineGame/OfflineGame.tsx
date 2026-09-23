@@ -1,6 +1,7 @@
-'use client';
+"use client";
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { analytics } from "@/lib/analytics/posthog";
 
 export interface OfflineGameProps {
   /** Optional custom class name */
@@ -13,12 +14,12 @@ interface Obstacle {
   id: number;
   x: number; // percentage 0 to 100
   y: number; // percentage 0 to 100
-  type: 'cloud' | 'lightning' | 'sun';
+  type: "cloud" | "lightning" | "sun";
   speed: number;
 }
 
 export default function OfflineGame({
-  className = '',
+  className = "",
   onRetryConnection,
 }: OfflineGameProps) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -42,7 +43,7 @@ export default function OfflineGame({
   // Load high score from localStorage
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('HawaPani_game_highscore');
+      const saved = localStorage.getItem("hawapani_game_highscore");
       if (saved) setHighScore(parseInt(saved, 10) || 0);
     } catch {
       // Ignore storage errors
@@ -53,7 +54,7 @@ export default function OfflineGame({
     if (newScore > highScore) {
       setHighScore(newScore);
       try {
-        localStorage.setItem('HawaPani_game_highscore', String(newScore));
+        localStorage.setItem("hawapani_game_highscore", String(newScore));
       } catch {
         // Ignore storage errors
       }
@@ -70,10 +71,10 @@ export default function OfflineGame({
     setIsPlaying(true);
   };
 
-  const movePlayer = useCallback((direction: 'left' | 'right') => {
+  const movePlayer = useCallback((direction: "left" | "right") => {
     setPlayerPosition((prev) => {
       const step = 8;
-      if (direction === 'left') {
+      if (direction === "left") {
         return Math.max(8, prev - step);
       }
       return Math.min(92, prev + step);
@@ -85,17 +86,17 @@ export default function OfflineGame({
     if (!isPlaying || gameOver) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+      if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
         e.preventDefault();
-        movePlayer('left');
-      } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+        movePlayer("left");
+      } else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") {
         e.preventDefault();
-        movePlayer('right');
+        movePlayer("right");
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isPlaying, gameOver, movePlayer]);
 
   // Main animation loop
@@ -121,7 +122,7 @@ export default function OfflineGame({
           id: nextIdRef.current++,
           x: Math.floor(Math.random() * 80) + 10,
           y: -5,
-          type: isBonus ? 'sun' : Math.random() < 0.3 ? 'lightning' : 'cloud',
+          type: isBonus ? "sun" : Math.random() < 0.3 ? "lightning" : "cloud",
           speed: 25 + Math.random() * 15,
         };
         obstaclesRef.current.push(newObs);
@@ -140,7 +141,7 @@ export default function OfflineGame({
         const distanceY = Math.abs(nextY - 85);
 
         if (distanceY < 7 && distanceX < 8) {
-          if (obs.type === 'sun') {
+          if (obs.type === "sun") {
             pointsAwarded += 5;
             continue; // Sun collected!
           } else {
@@ -153,7 +154,7 @@ export default function OfflineGame({
           nextObstacles.push({ ...obs, y: nextY });
         } else {
           // Survived obstacle
-          if (obs.type !== 'sun') {
+          if (obs.type !== "sun") {
             pointsAwarded += 1;
           }
         }
@@ -163,6 +164,7 @@ export default function OfflineGame({
         setGameOver(true);
         setIsPlaying(false);
         saveHighScore(score);
+        analytics.playOfflineGame(score);
         return;
       }
 
@@ -208,15 +210,18 @@ export default function OfflineGame({
         </div>
 
         <div className="flex items-center gap-3 text-xs font-semibold text-slate-600">
-          <span>Score: <strong className="text-blue-600 font-bold">{score}</strong></span>
-          <span>Best: <strong className="text-amber-600 font-bold">{highScore}</strong></span>
+          <span>
+            Score: <strong className="text-blue-600 font-bold">{score}</strong>
+          </span>
+          <span>
+            Best:{" "}
+            <strong className="text-amber-600 font-bold">{highScore}</strong>
+          </span>
         </div>
       </div>
 
       {/* Game arena canvas/box */}
-      <div
-        className="relative w-full h-72 sm:h-80 rounded-2xl bg-gradient-to-b from-sky-100 to-blue-50 border border-blue-200/60 overflow-hidden shadow-inner select-none"
-      >
+      <div className="relative w-full h-72 sm:h-80 rounded-2xl bg-gradient-to-b from-sky-100 to-blue-50 border border-blue-200/60 overflow-hidden shadow-inner select-none">
         {/* Falling elements */}
         {renderObstacles.map((obs) => (
           <div
@@ -224,14 +229,14 @@ export default function OfflineGame({
             style={{
               left: `${obs.x}%`,
               top: `${obs.y}%`,
-              transform: 'translate(-50%, -50%)',
+              transform: "translate(-50%, -50%)",
             }}
             className="absolute text-2xl sm:text-3xl transition-transform"
             aria-hidden="true"
           >
-            {obs.type === 'cloud' && '🌧️'}
-            {obs.type === 'lightning' && '⚡'}
-            {obs.type === 'sun' && '⭐'}
+            {obs.type === "cloud" && "🌧️"}
+            {obs.type === "lightning" && "⚡"}
+            {obs.type === "sun" && "⭐"}
           </div>
         ))}
 
@@ -239,8 +244,8 @@ export default function OfflineGame({
         <div
           style={{
             left: `${playerPosition}%`,
-            top: '85%',
-            transform: 'translate(-50%, -50%)',
+            top: "85%",
+            transform: "translate(-50%, -50%)",
           }}
           className="absolute text-3xl sm:text-4xl transition-all duration-75"
           aria-label="Player umbrella"
@@ -255,7 +260,8 @@ export default function OfflineGame({
               <>
                 <p className="text-2xl font-bold mb-1">Storm Caught You! ⛈️</p>
                 <p className="text-sm text-white/80 mb-4">
-                  Final Score: <span className="font-bold text-amber-300">{score}</span>
+                  Final Score:{" "}
+                  <span className="font-bold text-amber-300">{score}</span>
                 </p>
                 <button
                   onClick={resetGame}
@@ -271,7 +277,8 @@ export default function OfflineGame({
                   Weather Catcher Mini-Game
                 </h3>
                 <p className="text-xs sm:text-sm text-white/80 max-w-xs mb-4">
-                  No cached weather available. Dodge rain clouds 🌧️ and collect stars ⭐ while waiting for reconnection!
+                  No cached weather available. Dodge rain clouds 🌧️ and collect
+                  stars ⭐ while waiting for reconnection!
                 </p>
                 <button
                   onClick={resetGame}
@@ -290,7 +297,7 @@ export default function OfflineGame({
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={() => movePlayer('left')}
+            onClick={() => movePlayer("left")}
             aria-label="Move left"
             className="flex h-10 w-12 items-center justify-center rounded-xl bg-slate-100 border border-slate-200 text-lg font-bold text-slate-700 hover:bg-slate-200 active:bg-slate-300 transition cursor-pointer"
           >
@@ -298,7 +305,7 @@ export default function OfflineGame({
           </button>
           <button
             type="button"
-            onClick={() => movePlayer('right')}
+            onClick={() => movePlayer("right")}
             aria-label="Move right"
             className="flex h-10 w-12 items-center justify-center rounded-xl bg-slate-100 border border-slate-200 text-lg font-bold text-slate-700 hover:bg-slate-200 active:bg-slate-300 transition cursor-pointer"
           >

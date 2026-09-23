@@ -1,7 +1,8 @@
 # Testing Strategy
 
 ## Test Pyramid & Hierarchy
-HawaPani maintains a three-tiered testing structure:
+
+hawapani maintains a three-tiered testing structure:
 
 ```
         /  Cypress E2E  \       -> Critical user journeys & cross-page flows
@@ -10,6 +11,7 @@ HawaPani maintains a three-tiered testing structure:
 ```
 
 ### 1. Vitest (Unit & Domain Logic)
+
 - Executes in Node.js environment with `@vitest/coverage-v8`.
 - Focuses on:
   - Unit conversions (`lib/utils/weatherMetrics.ts`).
@@ -19,11 +21,13 @@ HawaPani maintains a three-tiered testing structure:
   - Custom hook behavior (`hooks/useFavorites.test.ts`).
 
 ### 2. Storybook (Component Workbench & A11y)
+
 - Documents UI states: Default, Loading shimmer, Error, Empty, Disabled, and Active.
 - Uses `@storybook/addon-a11y` to run axe automated accessibility assertions during component authoring.
 - Storybook interaction tests validate local user events (clicks, toggles, keyboard focus).
 
 ### 3. Cypress (End-to-End & Component Testing)
+
 - Modern Cypress 16 test suite verifying critical user journeys:
   - `LandingPage.cy.ts`: Core dashboard smoke test, hero metrics, and shell rendering.
   - `search_and_navigation.cy.ts`: Location search input debouncing, suggestion listbox popover, keyboard navigation, and URL query synchronization.
@@ -33,6 +37,7 @@ HawaPani maintains a three-tiered testing structure:
   - `offline_resiliency.cy.ts`: Offline cached forecast recovery with `OfflineBadge` vs. un-cached `OfflineGame` interactive fallback.
 
 ## Mocking & CI Integrity
+
 - Normal automated tests must **never** hit live WeatherAPI endpoints.
 - Integration tests employ mock route handlers or MSW fixtures.
 - Target coverage: **90%+ overall project coverage**. CI generates HTML and JSON coverage artifacts (`coverage/`).

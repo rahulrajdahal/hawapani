@@ -23,6 +23,7 @@ interface WeatherChartPoint {
   rainChance: number;
   humidity: number;
   windSpeed: number;
+  windUnit: string;
   conditionText: string;
   conditionIcon: string;
 }
@@ -81,7 +82,7 @@ function CustomWeatherTooltip({
           Rain: {data.rainChance}%
         </span>
         <span>Humidity: {data.humidity}%</span>
-        <span>Wind: {data.windSpeed} km/h</span>
+        <span>Wind: {data.windSpeed} {data.windUnit}</span>
       </div>
     </div>
   );
@@ -131,7 +132,10 @@ export default function WeatherTrendChart({
       feelsLike,
       rainChance,
       humidity: h.humidity,
-      windSpeed: h.wind_kph,
+      windSpeed: isCelsius
+        ? h.wind_kph
+        : (h.wind_mph ?? Math.round(h.wind_kph * 0.621371 * 10) / 10),
+      windUnit: isCelsius ? 'km/h' : 'mph',
       conditionText: h.condition.text,
       conditionIcon: h.condition.icon,
     };

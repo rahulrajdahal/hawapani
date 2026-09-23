@@ -1,15 +1,17 @@
 # Search Engine Optimization (SEO)
 
 ## URL Architecture
-- HawaPani operates on a single canonical page model:
+
+- hawapani operates on a single canonical page model:
   `https://hawapani.app/`
   with location state passed via search query parameters:
   `/?q=<location>`
 - Deep routing (e.g. `/weather/[city]`) is intentionally deferred unless full-scale multi-city static generation is required.
 
 ## Metadata & Social Sharing
+
 - **Dynamic Metadata**: Managed in `app/layout.tsx` via Next.js `Metadata` export.
-- **Title Templates**: Formatted as `%s | HawaPani Weather`.
+- **Title Templates**: Formatted as `%s | hawapani Weather`.
 - **OpenGraph & Twitter Cards**: Configured with rich preview cards, high-contrast imagery, and localized summaries.
 - **Search Directives**:
   - `app/robots.ts`: Generates dynamic `robots.txt` crawler policies.

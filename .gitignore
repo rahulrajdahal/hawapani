@@ -9,5 +9,6 @@ pnpm-lock.yaml
 yarn-lock.json
 
 *storybook.log
+*.log
 storybook-static
 coverage/

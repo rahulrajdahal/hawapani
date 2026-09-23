@@ -11,10 +11,6 @@ export interface NavbarProps {
   className?: string;
 }
 
-/**
- * Navbar renders the primary application navigation header featuring
- * the HawaPani logo mark, home route link, and global location search input.
- */
 export default function Navbar({ className = "" }: NavbarProps = {}) {
   return (
     <nav
@@ -23,13 +19,13 @@ export default function Navbar({ className = "" }: NavbarProps = {}) {
     >
       <Link
         href="/"
-        aria-label="HawaPani Home"
+        aria-label="hawapani Home"
         className="group flex items-center gap-2.5 text-xl sm:text-2xl md:text-[28px] font-black leading-none -tracking-[1px] text-white hover:opacity-95 transition-all rounded-2xl p-1 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-hidden"
       >
         <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 shadow-xs group-hover:scale-105 group-hover:bg-white/30 transition-all text-lg">
           ⛅
         </span>
-        <span className="drop-shadow-xs">HawaPani</span>
+        <span className="drop-shadow-xs">hawapani</span>
       </Link>
 
       <div className="w-full max-w-md">

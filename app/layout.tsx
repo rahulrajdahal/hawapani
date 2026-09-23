@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Suspense } from "react";
 import { Toaster } from "react-hot-toast";
+import { PostHogProvider } from "@/components";
 import "./globals.css";
 
 const inter = Inter({
@@ -9,14 +10,15 @@ const inter = Inter({
   display: "swap",
 });
 
-const APP_NAME = "HawaPani";
-const APP_DEFAULT_TITLE = "HawaPani — Real-Time Forecasts & Atmospheric Trends";
-const APP_TITLE_TEMPLATE = "%s | HawaPani";
+const APP_NAME = "hawapani";
+const APP_DEFAULT_TITLE = "hawapani | Real-Time Forecasts & Atmospheric Trends";
+const APP_TITLE_TEMPLATE = "%s | hawapani";
 const APP_DESCRIPTION =
   "Accurate global weather forecasts, interactive 24-hour hourly trendlines, 7-day extended outlooks, Air Quality Index (AQI), UV safety index, and multi-city weather comparison.";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://hawapani.vercel.app";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://HawaPani-nextjs.vercel.app"),
+  metadataBase: new URL(APP_URL),
   applicationName: APP_NAME,
   title: {
     default: APP_DEFAULT_TITLE,
@@ -35,9 +37,11 @@ export const metadata: Metadata = {
     "humidity",
     "weather comparison",
   ],
-  authors: [{ name: "HawaPani Team" }],
-  creator: "HawaPani",
-  publisher: "HawaPani",
+  authors: [
+    { name: "Rahul Raj Dahal", url: "https://rahulrajdahal.vercel.app" },
+  ],
+  creator: "Rahul Raj Dahal",
+  publisher: "Rahul Raj Dahal",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -49,7 +53,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://HawaPani-nextjs.vercel.app",
+    url: APP_URL,
     siteName: APP_NAME,
     title: APP_DEFAULT_TITLE,
     description: APP_DESCRIPTION,
@@ -91,14 +95,14 @@ export default function RootLayout({
     "@context": "https://schema.org",
     "@type": "WebApplication",
     name: APP_NAME,
-    url: "https://HawaPani-nextjs.vercel.app",
+    url: APP_URL,
     description: APP_DESCRIPTION,
     applicationCategory: "WeatherApplication",
     operatingSystem: "All",
     offers: {
       "@type": "Offer",
       price: "0",
-      priceCurrency: "USD",
+      priceCurrency: "GBP",
     },
   };
 
@@ -118,7 +122,9 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        <Suspense fallback="Loading...">{children}</Suspense>
+        <PostHogProvider>
+          <Suspense fallback="Loading...">{children}</Suspense>
+        </PostHogProvider>
         <Toaster />
       </body>
     </html>

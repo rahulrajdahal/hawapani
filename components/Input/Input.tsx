@@ -1,10 +1,13 @@
-import React, { ComponentPropsWithRef, forwardRef } from 'react';
+import React, { ComponentPropsWithRef, forwardRef } from "react";
 
 /**
  * Props for the Base Input component.
  * Extends standard HTML input attributes and optionally supports debounced updates.
  */
-export interface InputProps extends Omit<ComponentPropsWithRef<'input'>, 'value'> {
+export interface InputProps extends Omit<
+  ComponentPropsWithRef<"input">,
+  "value"
+> {
   /** Controlled input value */
   value?: string | number;
   /** Optional debounce delay in milliseconds before calling onChangeValue */
@@ -13,25 +16,20 @@ export interface InputProps extends Omit<ComponentPropsWithRef<'input'>, 'value'
   onChangeValue?: (value: string | number) => void;
 }
 
-/**
- * Input is the core base input component across HawaPani.
- * Supports standard HTML input behavior, forwarded refs, accessible defaults,
- * and optional built-in debounced updates via `debounce` and `onChangeValue`.
- */
 export default forwardRef(function Input(
   {
     debounce,
     value: controlledValue,
     onChangeValue,
     onChange,
-    'aria-label': ariaLabel,
+    "aria-label": ariaLabel,
     placeholder,
     ...props
   }: Readonly<InputProps>,
-  ref: React.ForwardedRef<HTMLInputElement>
+  ref: React.ForwardedRef<HTMLInputElement>,
 ) {
   const [internalValue, setInternalValue] = React.useState<string | number>(
-    controlledValue ?? ''
+    controlledValue ?? "",
   );
 
   React.useEffect(() => {
@@ -50,7 +48,7 @@ export default forwardRef(function Input(
     return () => clearTimeout(timeout);
   }, [debounce, onChangeValue, internalValue]);
 
-  const computedAriaLabel = ariaLabel || placeholder || 'Input field';
+  const computedAriaLabel = ariaLabel || placeholder || "Input field";
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const nextVal = e.target.value;
@@ -73,4 +71,3 @@ export default forwardRef(function Input(
     />
   );
 });
-

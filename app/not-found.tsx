@@ -1,17 +1,17 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
+import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: 'Page Not Found',
+  title: "Page Not Found",
   description:
-    'The requested meteorological page or location route could not be found on HawaPani.',
+    "The requested meteorological page or location route could not be found on hawapani.",
 };
 
 const POPULAR_CITIES = [
-  { name: 'Kathmandu', query: 'Kathmandu' },
-  { name: 'London', query: 'London' },
-  { name: 'Tokyo', query: 'Tokyo' },
-  { name: 'New York', query: 'New York' },
+  { name: "Kathmandu", query: "Kathmandu" },
+  { name: "London", query: "London" },
+  { name: "Tokyo", query: "Tokyo" },
+  { name: "New York", query: "New York" },
 ];
 
 export default function NotFound() {

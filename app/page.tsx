@@ -15,6 +15,7 @@ import {
 } from "@/components";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { analytics } from "@/lib/analytics/posthog";
 import { DEFAULT_CITY } from "@/lib/constants";
 import {
   IAstronomy,
@@ -36,7 +37,7 @@ import HourlyForecast from "./HourlyForecast";
 // Dynamically code-split heavy comparison modal (performance rule)
 const CityComparisonModal = dynamic(
   () => import("@/components/CityComparisonModal/CityComparisonModal"),
-  { ssr: false }
+  { ssr: false },
 );
 
 export type {
@@ -53,12 +54,8 @@ function WeatherDashboard() {
   const [forecastTab, setForecastTab] = useState<"hourly" | "daily">("hourly");
   const [isCompareOpen, setIsCompareOpen] = useState(false);
 
-  const {
-    favorites,
-    toggleFavorite,
-    removeFavorite,
-    isFavorite,
-  } = useFavorites();
+  const { favorites, toggleFavorite, removeFavorite, isFavorite } =
+    useFavorites();
 
   const [currentForecast, setCurrentForecast] = useState<ICurrentForecast>();
   const [currentLocation, setCurrentLocation] = useState<ICurrentLocation>();
@@ -78,7 +75,7 @@ function WeatherDashboard() {
   // Restore persistent unit scale preference from localStorage
   useEffect(() => {
     try {
-      const savedScale = localStorage.getItem("HawaPani_temp_scale");
+      const savedScale = localStorage.getItem("hawapani_temp_scale");
       if (savedScale !== null) {
         setTempScale(savedScale === "fahrenheit");
       }
@@ -89,10 +86,11 @@ function WeatherDashboard() {
 
   const handleTempScaleChange = (isFahrenheit: boolean) => {
     setTempScale(isFahrenheit);
+    analytics.toggleUnit(isFahrenheit ? "fahrenheit" : "celsius");
     try {
       localStorage.setItem(
-        "HawaPani_temp_scale",
-        isFahrenheit ? "fahrenheit" : "celsius"
+        "hawapani_temp_scale",
+        isFahrenheit ? "fahrenheit" : "celsius",
       );
     } catch {
       // Ignore storage errors
@@ -109,7 +107,7 @@ function WeatherDashboard() {
         () => {
           // If denied or timed out, default city is active
         },
-        { timeout: 8000, maximumAge: 60000 }
+        { timeout: 8000, maximumAge: 60000 },
       );
     }
   }, [searchParams, router]);
@@ -118,8 +116,8 @@ function WeatherDashboard() {
     try {
       const normalized = query.toLowerCase().trim();
       const cached =
-        localStorage.getItem(`HawaPani_forecast_${normalized}`) ||
-        localStorage.getItem("HawaPani_forecast_last");
+        localStorage.getItem(`hawapani_forecast_${normalized}`) ||
+        localStorage.getItem("hawapani_forecast_last");
 
       if (cached) {
         const data = JSON.parse(cached);
@@ -164,7 +162,7 @@ function WeatherDashboard() {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       const responseJson = await response.json();
@@ -199,16 +197,16 @@ function WeatherDashboard() {
         try {
           const payload = JSON.stringify(responseJson.data);
           localStorage.setItem(
-            `HawaPani_forecast_${activeQuery.toLowerCase().trim()}`,
-            payload
+            `hawapani_forecast_${activeQuery.toLowerCase().trim()}`,
+            payload,
           );
           if (responseJson.data.currentLocation?.name) {
             localStorage.setItem(
-              `HawaPani_forecast_${responseJson.data.currentLocation.name.toLowerCase().trim()}`,
-              payload
+              `hawapani_forecast_${responseJson.data.currentLocation.name.toLowerCase().trim()}`,
+              payload,
             );
           }
-          localStorage.setItem("HawaPani_forecast_last", payload);
+          localStorage.setItem("hawapani_forecast_last", payload);
         } catch {
           // Ignore storage quota errors
         }
@@ -242,14 +240,14 @@ function WeatherDashboard() {
     if (!currentLocation?.localtime) return true;
     const hour = parseInt(
       currentLocation.localtime.split(" ")[1]?.split(":")[0] || "12",
-      10
+      10,
     );
     return hour >= 6 && hour < 19;
   })();
 
   const atmosphericTheme = getAtmosphericTheme(
     currentForecast?.condition?.text,
-    isDayTime
+    isDayTime,
   );
 
   return (
@@ -300,21 +298,24 @@ function WeatherDashboard() {
 
         {loading && !currentForecast ? (
           <WeatherDashboardSkeleton />
-        ) : !isOnline && !currentForecast ? (
-          <div className="flex flex-1 min-h-0 w-full items-center justify-center p-4">
+        ) : !currentForecast ? (
+          <div className="flex flex-1 min-h-0 w-full flex-col items-center justify-center p-4 gap-4">
+            {error && (
+              <div
+                className="w-full max-w-xl text-center bg-red-500/10 border border-red-500/20 text-red-700 px-4 py-3 rounded-2xl text-sm font-medium backdrop-blur-md flex items-center justify-between gap-3 shadow-xs"
+                role="alert"
+              >
+                <span>{error}</span>
+                <button
+                  type="button"
+                  onClick={() => getForecast()}
+                  className="rounded-xl bg-red-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-red-500 transition cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-red-400"
+                >
+                  Retry 🔄
+                </button>
+              </div>
+            )}
             <OfflineGame onRetryConnection={() => getForecast()} />
-          </div>
-        ) : error && !currentForecast ? (
-          <div className="flex flex-1 min-h-0 w-full flex-col items-center justify-center gap-4 p-8 text-center rounded-3xl bg-white/80 backdrop-blur-xl shadow-2xl border border-white/60">
-            <p className="text-xl font-medium text-red-500" role="alert">
-              {error}
-            </p>
-            <button
-              onClick={() => getForecast()}
-              className="rounded-full bg-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-md hover:bg-blue-700 transition cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden"
-            >
-              Retry
-            </button>
           </div>
         ) : (
           <div className="flex-1 min-h-0 flex flex-col lg:flex-row rounded-3xl lg:rounded-[32px] bg-white/80 backdrop-blur-xl border border-white/60 shadow-2xl lg:overflow-hidden transition-all">
@@ -327,7 +328,12 @@ function WeatherDashboard() {
                 }
                 last_updated={currentForecast.last_updated}
                 tz_id={currentLocation.tz_id}
-                windSpeed={currentForecast.wind_kph}
+                windSpeed={
+                  tempScale
+                    ? (currentForecast.wind_mph ?? Math.round(currentForecast.wind_kph * 0.621371 * 10) / 10)
+                    : currentForecast.wind_kph
+                }
+                windUnit={tempScale ? "mph" : "km/h"}
                 theme={atmosphericTheme}
               />
             ) : null}
@@ -343,7 +349,9 @@ function WeatherDashboard() {
                       { value: "daily", label: "7-Day Forecast", icon: "📅" },
                     ]}
                     value={forecastTab}
-                    onChange={(val) => setForecastTab(val as "hourly" | "daily")}
+                    onChange={(val) =>
+                      setForecastTab(val as "hourly" | "daily")
+                    }
                     ariaLabel="Forecast projection view"
                     role="tablist"
                   />
@@ -377,14 +385,14 @@ function WeatherDashboard() {
                     conditionText={currentForecast.condition.text}
                     isFavorite={isFavorite(
                       currentLocation.name,
-                      currentLocation.country
+                      currentLocation.country,
                     )}
                     onToggleFavorite={() =>
                       toggleFavorite(
                         currentLocation.country
                           ? `${currentLocation.name}, ${currentLocation.country}`
                           : currentLocation.name,
-                        currentLocation.country
+                        currentLocation.country,
                       )
                     }
                   />
@@ -393,7 +401,8 @@ function WeatherDashboard() {
                 {/* Conditional Tab Panel Rendering: Hourly vs Daily */}
                 <div className="mt-5">
                   {forecastTab === "hourly" ? (
-                    hourlyForecasts.length > 0 && currentForecast && (
+                    hourlyForecasts.length > 0 &&
+                    currentForecast && (
                       <div
                         id="panel-hourly"
                         role="tabpanel"
@@ -449,7 +458,7 @@ function WeatherDashboard() {
         className="flex-shrink-0 border-t border-white/10 bg-slate-950/40 backdrop-blur-md px-4 py-1.5 text-center text-[11px] text-white/70"
       >
         <p>
-          HawaPani &bull; Powered by{" "}
+          hawapani &bull; Powered by{" "}
           <Link
             href="https://www.weatherapi.com/"
             target="_blank"
@@ -468,8 +477,8 @@ export default function Home() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-[100dvh] w-full items-center justify-center bg-[#F0F4FA] text-lg font-medium text-gray-500">
-          Loading HawaPani...
+        <div className="flex h-dvh w-full items-center justify-center bg-[#F0F4FA] text-lg font-medium text-gray-500">
+          Loading hawapani...
         </div>
       }
     >

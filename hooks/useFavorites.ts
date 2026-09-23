@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
-export const FAVORITES_STORAGE_KEY = 'HawaPani_favorite_cities';
+export const FAVORITES_STORAGE_KEY = "hawapani_favorite_cities";
 export const DEFAULT_FAVORITES = [
-  'Bhaktapur',
-  'Auckland',
-  'Douglas, Isle of Man',
-  'Canberra',
+  "Bhaktapur",
+  "Auckland",
+  "Douglas, Isle of Man",
+  "Canberra",
 ];
 
 export function normalizeCity(name: string): string {
@@ -19,7 +19,7 @@ export function normalizeCity(name: string): string {
  */
 export function migrateLegacyFavorites(items: string[]): string[] {
   return items.map((item) =>
-    item.trim().toLowerCase() === 'douglas' ? 'Douglas, Isle of Man' : item
+    item.trim().toLowerCase() === "douglas" ? "Douglas, Isle of Man" : item,
   );
 }
 
@@ -29,21 +29,21 @@ export function migrateLegacyFavorites(items: string[]): string[] {
 export function isFavoriteMatch(
   favorites: string[],
   city?: string | null,
-  country?: string | null
+  country?: string | null,
 ): boolean {
   if (!city) return false;
   const targetNorm = normalizeCity(city);
-  const targetBase = targetNorm.split(',')[0].trim();
-  const countryNorm = country ? normalizeCity(country) : '';
+  const targetBase = targetNorm.split(",")[0].trim();
+  const countryNorm = country ? normalizeCity(country) : "";
 
   return favorites.some((f) => {
     const fNorm = normalizeCity(f);
     // Exact match (e.g. "Douglas, Isle of Man" === "Douglas, Isle of Man")
     if (fNorm === targetNorm) return true;
 
-    const fParts = fNorm.split(',').map((p) => p.trim());
+    const fParts = fNorm.split(",").map((p) => p.trim());
     const fBase = fParts[0];
-    const fCountry = fParts.length > 1 ? fParts[fParts.length - 1] : '';
+    const fCountry = fParts.length > 1 ? fParts[fParts.length - 1] : "";
 
     // Base city name must match exactly (prevent "Douglasville" matching "Douglas")
     if (fBase !== targetBase) return false;
@@ -54,7 +54,7 @@ export function isFavoriteMatch(
     }
 
     // If target string includes a country (e.g. "Douglas, Isle of Man")
-    if (targetNorm.includes(',') && fCountry) {
+    if (targetNorm.includes(",") && fCountry) {
       return targetNorm.includes(fCountry);
     }
 
@@ -69,11 +69,12 @@ export function isFavoriteMatch(
 export function addFavoriteEntry(
   favorites: string[],
   city: string,
-  country?: string
+  country?: string,
 ): string[] {
   const trimmed = city.trim();
   if (!trimmed) return favorites;
-  const entry = country && !trimmed.includes(',') ? `${trimmed}, ${country}` : trimmed;
+  const entry =
+    country && !trimmed.includes(",") ? `${trimmed}, ${country}` : trimmed;
   if (isFavoriteMatch(favorites, entry, country)) {
     return favorites;
   }
@@ -83,15 +84,18 @@ export function addFavoriteEntry(
 /**
  * Pure helper to remove a city by exact or base matching
  */
-export function removeFavoriteEntry(favorites: string[], city: string): string[] {
+export function removeFavoriteEntry(
+  favorites: string[],
+  city: string,
+): string[] {
   const trimmedNorm = normalizeCity(city);
   return favorites.filter((f) => {
     const fNorm = normalizeCity(f);
     if (fNorm === trimmedNorm) return false;
-    const fBase = fNorm.split(',')[0].trim();
-    const targetBase = trimmedNorm.split(',')[0].trim();
+    const fBase = fNorm.split(",")[0].trim();
+    const targetBase = trimmedNorm.split(",")[0].trim();
     if (fBase === targetBase) {
-      if (fNorm.includes(',') && trimmedNorm.includes(',')) {
+      if (fNorm.includes(",") && trimmedNorm.includes(",")) {
         return fNorm !== trimmedNorm;
       }
       return false;
@@ -114,13 +118,16 @@ export function useFavorites() {
           const migrated = migrateLegacyFavorites(parsed);
           setFavorites(migrated);
           if (JSON.stringify(migrated) !== stored) {
-            localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(migrated));
+            localStorage.setItem(
+              FAVORITES_STORAGE_KEY,
+              JSON.stringify(migrated),
+            );
           }
         }
       } else {
         localStorage.setItem(
           FAVORITES_STORAGE_KEY,
-          JSON.stringify(DEFAULT_FAVORITES)
+          JSON.stringify(DEFAULT_FAVORITES),
         );
       }
     } catch {
@@ -153,13 +160,18 @@ export function useFavorites() {
 
   const toggleFavorite = (city: string, country?: string) => {
     if (isFavoriteMatch(favorites, city, country)) {
-      removeFavorite(country && !city.includes(',') ? `${city}, ${country}` : city);
+      removeFavorite(
+        country && !city.includes(",") ? `${city}, ${country}` : city,
+      );
     } else {
       addFavorite(city, country);
     }
   };
 
-  const isFavorite = (city?: string | null, country?: string | null): boolean => {
+  const isFavorite = (
+    city?: string | null,
+    country?: string | null,
+  ): boolean => {
     return isFavoriteMatch(favorites, city, country);
   };
 
@@ -172,5 +184,3 @@ export function useFavorites() {
     isFavorite,
   };
 }
-
-

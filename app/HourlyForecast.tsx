@@ -66,7 +66,12 @@ export default function HourlyForecast({
               isCurrentHour={isSameHour(hourlyForecast.time, time)}
               condition={hourlyForecast.condition}
               humidity={hourlyForecast.humidity}
-              windSpeed={hourlyForecast.wind_kph}
+              windSpeed={
+                isCelsius
+                  ? hourlyForecast.wind_kph
+                  : (hourlyForecast.wind_mph ?? Math.round(hourlyForecast.wind_kph * 0.621371 * 10) / 10)
+              }
+              windUnit={isCelsius ? "km/h" : "mph"}
               temp={isCelsius ? hourlyForecast.temp_c : hourlyForecast.temp_f}
               time={hourlyForecast.time}
             />

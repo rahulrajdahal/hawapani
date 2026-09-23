@@ -180,7 +180,12 @@ export default function MetricsGrid({
 
           <div className="mt-3 flex items-center justify-between flex-wrap gap-2 border-t border-slate-100 pt-2.5 text-xs text-slate-500 font-medium">
             <span>Humidity: {currentForecast.humidity}%</span>
-            <span>Wind: {currentForecast.wind_kph} km/h</span>
+            <span>
+              Wind:{" "}
+              {isCelsius
+                ? `${currentForecast.wind_kph} km/h`
+                : `${currentForecast.wind_mph ?? Math.round(currentForecast.wind_kph * 0.621371 * 10) / 10} mph`}
+            </span>
           </div>
         </article>
 

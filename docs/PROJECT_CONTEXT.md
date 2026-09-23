@@ -1,9 +1,11 @@
 # Project Context
 
 ## Purpose & Vision
-**HawaPani** is a modern, responsive, and privacy-first weather Progressive Web Application (PWA) built with Next.js 16 (App Router), TypeScript, and Tailwind CSS v4.
+
+**hawapani** is a modern, responsive, and privacy-first weather Progressive Web Application (PWA) built with Next.js 16 (App Router), TypeScript, and Tailwind CSS v4.
 
 The app empowers users to monitor atmospheric conditions across the globe with precision:
+
 - Real-time meteorological metrics (temperature, humidity, wind, UV index, air quality US-EPA metrics).
 - 24-hour continuous rolling hourly forecast and Bézier trendline chart.
 - 7-day extended daily forecast with precipitation probabilities and temperature ranges.
@@ -12,7 +14,9 @@ The app empowers users to monitor atmospheric conditions across the globe with p
 - Offline support: cached weather forecasts for offline review, plus an offline fallback weather game when no cache exists.
 
 ## Current Scope & Architecture
-HawaPani is a lightweight, frontend-focused Next.js web application.
+
+hawapani is a lightweight, frontend-focused Next.js web application.
+
 - **Location State Model**: Single route with query parameter synchronization:
   `/?q=<location>`
 - The application intentionally does **NOT** require:
@@ -24,6 +28,7 @@ HawaPani is a lightweight, frontend-focused Next.js web application.
   - Kubernetes or complex Infrastructure-as-Code (IaC)
 
 ## Technology Stack
+
 - **Framework**: Next.js 16 (App Router)
 - **Runtime & UI**: React 19, TypeScript
 - **Styling**: Tailwind CSS v4 with glassmorphic atmospheric tokens

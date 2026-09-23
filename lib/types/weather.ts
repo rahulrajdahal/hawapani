@@ -47,6 +47,7 @@ export interface ICurrentForecast {
   temp_f: number;
   humidity: number;
   wind_kph: number;
+  wind_mph?: number;
   wind_dir?: string;
   pressure_mb?: number;
   pressure_in?: number;
@@ -79,6 +80,7 @@ export interface IHourlyForecast {
   temp_f: number;
   humidity: number;
   wind_kph: number;
+  wind_mph?: number;
   condition: ICondition;
   chance_of_rain?: number;
   uv?: number;

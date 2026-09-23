@@ -48,3 +48,5 @@ export type { WeatherDashboardSkeletonProps } from './WeatherDashboardSkeleton/W
 
 export { default as WeatherTrendChart } from './WeatherTrendChart/WeatherTrendChart';
 export type { WeatherTrendChartProps } from './WeatherTrendChart/WeatherTrendChart';
+
+export { default as PostHogProvider } from './PostHogProvider/PostHogProvider';

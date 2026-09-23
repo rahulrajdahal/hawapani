@@ -1,9 +1,9 @@
-# HawaPani
+# hawapani
 
 > A modern, responsive, and privacy-first weather Progressive Web Application (PWA) built with Next.js 16 (App Router), React 19, TypeScript, and Tailwind CSS v4.
 
 [![Quality & CI Pipeline](https://github.com/rahulrajdahal/hawapani/actions/workflows/quality.yml/badge.svg)](https://github.com/rahulrajdahal/hawapani/actions/workflows/quality.yml)
-[![Deployment](https://img.shields.io/badge/Vercel-Live_Demo-000000?style=flat&logo=vercel&logoColor=white)](https://HawaPani-nextjs.vercel.app)
+[![Deployment](https://img.shields.io/badge/Vercel-Live_Demo-000000?style=flat&logo=vercel&logoColor=white)](https://hawapani.vercel.app)
 [![Coverage](https://img.shields.io/badge/Coverage-90%25+-brightgreen?style=flat&logo=vitest&logoColor=white)](https://github.com/rahulrajdahal/hawapani)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-000000?style=flat&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![React 19](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=black)](https://react.dev/)
@@ -21,7 +21,7 @@ Explore the live production deployment on Vercel: **[https://hawapani.vercel.app
 
 |                                Dashboard Overview                                |                                  7 Day Forecast                                   |
 | :------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------: |
-| [![HawaPani Dashboard](./screenshots/hawapani.png)](https://hawapani.vercel.app) | [![HawaPani Details](./screenshots/hawapani-7d.png)](https://hawapani.vercel.app) |
+| [![hawapani Dashboard](./screenshots/hawapani.png)](https://hawapani.vercel.app) | [![hawapani Details](./screenshots/hawapani-7d.png)](https://hawapani.vercel.app) |
 
 ---
 
@@ -125,6 +125,9 @@ Add your WeatherAPI credentials:
 
 ```env
 WEATHER_API_KEY=your_actual_weather_api_key_here
+NEXT_PUBLIC_APP_URL=https://hawapani.vercel.app
+NEXT_PUBLIC_POSTHOG_KEY=your_optional_posthog_key_here
+NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
 ```
 
 > [!NOTE]
@@ -147,7 +150,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to view the 
 | `npm run dev`                | Starts the Next.js local development server at `localhost:3000`.       |
 | `npm run build`              | Compiles the optimized production application.                         |
 | `npm run start`              | Runs the compiled production build locally.                            |
-| `npm run lint`               | Checks TypeScript type integrity across the codebase (`tsc --noEmit`). |
+| `npm run lint`               | Runs Next.js ESLint rules and TypeScript typechecks (`next lint && tsc --noEmit`). |
 | `npm run test:unit`          | Runs Vitest unit and integration test suites.                          |
 | `npm run test:watch`         | Runs Vitest in interactive watch mode for active development.          |
 | `npm run test:coverage`      | Generates a detailed V8 code coverage report in `./coverage`.          |
@@ -164,7 +167,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to view the 
 
 ## 🧪 Testing & Quality Assurance
 
-HawaPani implements a multi-tier testing and verification architecture:
+hawapani implements a multi-tier testing and verification architecture:
 
 1. **Unit & Mathematical Precision (Vitest 5)**:
    - Tests pure functions, meteorological formulas (heat index, dew point, wind chill, air quality categorization), date/time parsers, and custom hooks.

@@ -9,8 +9,10 @@ import Image from 'next/image';
  * Props for the CurrentForecast hero panel component.
  */
 export interface CurrentForecastProps {
-  /** Wind speed formatted in km/h */
+  /** Wind speed formatted in active unit */
   windSpeed: number;
+  /** Wind speed unit (defaults to 'km/h') */
+  windUnit?: string;
   /** ISO timestamp string representing the last update time */
   last_updated: string;
   /** Weather condition summary and WeatherAPI icon URL */
@@ -40,6 +42,7 @@ export type ICurrentForecast = CurrentForecastProps;
  */
 export default function CurrentForecast({
   windSpeed,
+  windUnit = 'km/h',
   last_updated,
   condition: { text, icon },
   humidity,
@@ -127,7 +130,7 @@ export default function CurrentForecast({
 
             <div
               className="flex items-center justify-center gap-1.5 sm:gap-2 rounded-2xl bg-white/90 backdrop-blur-md py-1.5 px-2.5 sm:px-3.5 text-center text-xs font-semibold text-slate-800 shadow-sm border border-white/60 transition-transform hover:scale-[1.02]"
-              aria-label={`Wind Speed: ${windSpeed} kilometers per hour`}
+              aria-label={`Wind Speed: ${windSpeed} ${windUnit === 'mph' ? 'miles per hour' : 'kilometers per hour'}`}
             >
               <Image
                 src={windIcon}
@@ -137,7 +140,7 @@ export default function CurrentForecast({
                 height={16}
                 className="h-3.5 w-3.5 text-teal-600 shrink-0"
               />
-              <span className="truncate">Wind: {windSpeed} km/h</span>
+              <span className="truncate">Wind: {windSpeed} {windUnit}</span>
             </div>
           </div>
         </div>
