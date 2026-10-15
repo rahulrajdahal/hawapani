@@ -3,6 +3,7 @@
 node_modules/
 
 .env
+.env*.local
 cypress.env.json
 
 pnpm-lock.yaml

@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { checkRateLimit, getClientIp, createRateLimitResponse } from "./rateLimit";
+import {
+  checkRateLimit,
+  getClientIp,
+  createRateLimitResponse,
+  cleanupExpiredRecords,
+  resetRateLimitStore,
+} from "./rateLimit";
 import { NextRequest } from "next/server";
 
 describe("rateLimit utility", () => {
@@ -25,6 +31,13 @@ describe("rateLimit utility", () => {
     it("falls back to 127.0.0.1 when headers are missing", () => {
       const req = new NextRequest("http://localhost/api/test");
       expect(getClientIp(req)).toBe("127.0.0.1");
+    });
+
+    it("sanitizes injected characters from IP headers", () => {
+      const req = new NextRequest("http://localhost/api/test", {
+        headers: { "x-forwarded-for": "192.168.1.1; injection=true" },
+      });
+      expect(getClientIp(req)).toBe("192.168.1.1");
     });
   });
 
@@ -80,6 +93,32 @@ describe("rateLimit utility", () => {
 
       const body = await response.json();
       expect(body.error).toContain("Too many requests");
+    });
+  });
+
+  describe("memory bounding and cleanup", () => {
+    beforeEach(() => {
+      resetRateLimitStore();
+    });
+
+    it("cleans up expired records when requested", () => {
+      vi.useFakeTimers();
+      checkRateLimit("temp-ip-1", { limit: 5, windowMs: 1000 });
+      checkRateLimit("temp-ip-2", { limit: 5, windowMs: 1000 });
+
+      vi.advanceTimersByTime(1100);
+      cleanupExpiredRecords(Date.now(), true);
+
+      // Subsequent call creates a fresh record
+      const result = checkRateLimit("temp-ip-1", { limit: 5, windowMs: 1000 });
+      expect(result.remaining).toBe(4);
+    });
+
+    it("resets store completely via resetRateLimitStore", () => {
+      checkRateLimit("persist-ip", { limit: 2, windowMs: 60000 });
+      resetRateLimitStore();
+      const fresh = checkRateLimit("persist-ip", { limit: 2, windowMs: 60000 });
+      expect(fresh.remaining).toBe(1);
     });
   });
 });

@@ -235,6 +235,12 @@ describe('useFavorites hook', () => {
     states = [];
     const runner2 = renderFavoritesHook();
     expect(runner2.current.isLoaded).toBe(true);
+
+    // Non-string or oversized items
+    mockStorage[FAVORITES_STORAGE_KEY] = JSON.stringify([123, null, 'Valid City', 'a'.repeat(150)]);
+    states = [];
+    const runner3 = renderFavoritesHook();
+    expect(runner3.current.favorites).toEqual(['Valid City']);
   });
 
   it('allows adding, removing, and checking favorites', () => {

@@ -8,7 +8,6 @@ import {
   MetricsGrid,
   Navbar,
   OfflineBadge,
-  OfflineGame,
   SegmentedControl,
   UnitToggle,
   WeatherDashboardSkeleton,
@@ -34,9 +33,14 @@ import toast from "react-hot-toast";
 import CurrentForecast from "./CurrentForecast";
 import HourlyForecast from "./HourlyForecast";
 
-// Dynamically code-split heavy comparison modal (performance rule)
+// Dynamically code-split heavy comparison modal and arcade offline game (performance rule)
 const CityComparisonModal = dynamic(
   () => import("@/components/CityComparisonModal/CityComparisonModal"),
+  { ssr: false },
+);
+
+const OfflineGame = dynamic(
+  () => import("@/components/OfflineGame/OfflineGame"),
   { ssr: false },
 );
 
@@ -70,7 +74,12 @@ function WeatherDashboard() {
   const isOnline = useOnlineStatus();
   const [isOfflineCached, setIsOfflineCached] = useState(false);
 
-  const activeQuery = searchParams.get("q") || DEFAULT_CITY;
+  const rawQuery = searchParams.get("q") || DEFAULT_CITY;
+  const activeQuery =
+    rawQuery
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, "")
+      .trim()
+      .slice(0, 100) || DEFAULT_CITY;
 
   // Restore persistent unit scale preference from localStorage
   useEffect(() => {
@@ -112,40 +121,43 @@ function WeatherDashboard() {
     }
   }, [searchParams, router]);
 
-  const loadCachedForecast = useCallback((query: string) => {
-    try {
-      const normalized = query.toLowerCase().trim();
-      const cached =
-        localStorage.getItem(`hawapani_forecast_${normalized}`) ||
-        localStorage.getItem("hawapani_forecast_last");
+  const loadCachedForecast = useCallback(
+    (query: string, markOffline = false) => {
+      try {
+        const normalized = query.toLowerCase().trim();
+        const cached =
+          localStorage.getItem(`hawapani_forecast_${normalized}`) ||
+          (markOffline ? localStorage.getItem("hawapani_forecast_last") : null);
 
-      if (cached) {
-        const data = JSON.parse(cached);
-        if (data?.currentForecast && data?.currentLocation) {
-          setCurrentForecast(data.currentForecast);
-          setCurrentLocation(data.currentLocation);
-          setHourlyForecasts(data.forecast ?? []);
-          setDailyForecasts(data.dailyForecast ?? []);
-          setAstronomy(data.astronomy);
-          setAlerts(data.alerts ?? []);
-          setIsOfflineCached(true);
-          setError(null);
-          return true;
+        if (cached) {
+          const data = JSON.parse(cached);
+          if (data?.currentForecast && data?.currentLocation) {
+            setCurrentForecast(data.currentForecast);
+            setCurrentLocation(data.currentLocation);
+            setHourlyForecasts(data.forecast ?? []);
+            setDailyForecasts(data.dailyForecast ?? []);
+            setAstronomy(data.astronomy);
+            setAlerts(data.alerts ?? []);
+            if (markOffline) {
+              setIsOfflineCached(true);
+            }
+            setError(null);
+            return true;
+          }
         }
+      } catch {
+        // Ignore cache parse errors
       }
-    } catch {
-      // Ignore cache parse errors
-    }
-    return false;
-  }, []);
+      return false;
+    },
+    [],
+  );
 
   const getForecast = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
     // When offline, immediately attempt to retrieve cached forecast without pointless network retries
     if (!isOnline) {
-      const restored = loadCachedForecast(activeQuery);
+      setLoading(true);
+      const restored = loadCachedForecast(activeQuery, true);
       setLoading(false);
       if (!restored) {
         setIsOfflineCached(false);
@@ -154,22 +166,23 @@ function WeatherDashboard() {
       return;
     }
 
+    // Instant warm hydration from local cache if available for fast zero-CLS transition
+    const hasWarmCache = loadCachedForecast(activeQuery, false);
+    if (!hasWarmCache) {
+      setLoading(true);
+    }
+    setError(null);
+
     try {
       const response = await fetch(
         `/api/weather/forecast?q=${encodeURIComponent(activeQuery)}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
       );
 
       const responseJson = await response.json();
 
       if (!response.ok || responseJson?.error) {
         // Fallback to cache if network request failed
-        const restored = loadCachedForecast(activeQuery);
+        const restored = loadCachedForecast(activeQuery, true);
         if (restored) {
           toast("Loaded cached forecast.", { icon: "📦" });
           return;
@@ -213,7 +226,7 @@ function WeatherDashboard() {
       }
     } catch {
       // Network drop or offline error fallback
-      const restored = loadCachedForecast(activeQuery);
+      const restored = loadCachedForecast(activeQuery, true);
       if (restored) {
         toast("Network unavailable. Showing cached forecast.", { icon: "📡" });
         return;
@@ -252,13 +265,13 @@ function WeatherDashboard() {
 
   return (
     <div
-      className="bg-image min-h-[100dvh] lg:h-[100dvh] lg:max-h-[100dvh] flex flex-col transition-all duration-700 overflow-x-hidden lg:overflow-hidden select-none"
+      className="bg-image min-h-dvh lg:h-dvh lg:max-h-dvh flex flex-col transition-all duration-700 overflow-x-hidden lg:overflow-hidden select-none"
       style={{
         background: `${atmosphericTheme.backgroundGradient}, url('/assets/main.png') center/cover`,
       }}
     >
       {/* Header Landmark */}
-      <header role="banner" className="w-full flex-shrink-0">
+      <header role="banner" className="w-full shrink-0">
         <Navbar />
       </header>
 
@@ -269,7 +282,7 @@ function WeatherDashboard() {
         className="flex-1 min-h-0 px-3 sm:px-4 md:px-[5%] xl:px-[8%] 2xl:px-[12.5%] pb-3 lg:pb-2 flex flex-col lg:overflow-hidden outline-hidden"
       >
         {/* Quick-Access Favorites / Bookmarks Bar */}
-        <div className="mb-2 flex-shrink-0">
+        <div className="mb-2 shrink-0">
           <FavoritesBar
             favorites={favorites}
             activeCity={
@@ -285,13 +298,13 @@ function WeatherDashboard() {
 
         {/* Offline cached status notification */}
         {isOfflineCached && currentForecast && (
-          <div className="flex-shrink-0 mb-2 flex justify-start">
+          <div className="shrink-0 mb-2 flex justify-start">
             <OfflineBadge lastUpdated={currentForecast.last_updated} />
           </div>
         )}
 
         {alerts && alerts.length > 0 && (
-          <div className="flex-shrink-0 mb-2">
+          <div className="shrink-0 mb-2">
             <AlertBanner alerts={alerts} />
           </div>
         )}
@@ -318,7 +331,7 @@ function WeatherDashboard() {
             <OfflineGame onRetryConnection={() => getForecast()} />
           </div>
         ) : (
-          <div className="flex-1 min-h-0 flex flex-col lg:flex-row rounded-3xl lg:rounded-[32px] bg-white/80 backdrop-blur-xl border border-white/60 shadow-2xl lg:overflow-hidden transition-all">
+          <div className="flex-1 min-h-0 flex flex-col lg:flex-row rounded-3xl lg:rounded-4xl bg-white/80 backdrop-blur-xl border border-white/60 shadow-2xl lg:overflow-hidden transition-all">
             {currentForecast && currentLocation ? (
               <CurrentForecast
                 condition={currentForecast.condition}
@@ -330,7 +343,8 @@ function WeatherDashboard() {
                 tz_id={currentLocation.tz_id}
                 windSpeed={
                   tempScale
-                    ? (currentForecast.wind_mph ?? Math.round(currentForecast.wind_kph * 0.621371 * 10) / 10)
+                    ? (currentForecast.wind_mph ??
+                      Math.round(currentForecast.wind_kph * 0.621371 * 10) / 10)
                     : currentForecast.wind_kph
                 }
                 windUnit={tempScale ? "mph" : "km/h"}
@@ -341,7 +355,7 @@ function WeatherDashboard() {
             {/* Right Pane: Pinned Controls + Scrollable Weather Information */}
             <div className="flex-1 lg:min-h-0 lg:h-full flex flex-col lg:overflow-hidden">
               {/* Pinned Top Controls Bar */}
-              <div className="flex-shrink-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200/70 px-3.5 py-2.5 sm:px-6 sm:py-3 lg:px-8">
+              <div className="shrink-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200/70 px-3.5 py-2.5 sm:px-6 sm:py-3 lg:px-8">
                 <div className="flex items-center justify-between flex-wrap gap-2.5 sm:gap-3">
                   <SegmentedControl
                     options={[
@@ -455,7 +469,7 @@ function WeatherDashboard() {
       {/* Compact Flex-Shrink-0 Footer */}
       <footer
         role="contentinfo"
-        className="flex-shrink-0 border-t border-white/10 bg-slate-950/40 backdrop-blur-md px-4 py-1.5 text-center text-[11px] text-white/70"
+        className="shrink-0 border-t border-white/10 bg-slate-950/40 backdrop-blur-md px-4 py-1.5 text-center text-[11px] text-white/70"
       >
         <p>
           hawapani &bull; Powered by{" "}

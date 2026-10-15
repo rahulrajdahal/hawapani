@@ -274,6 +274,7 @@ export default function SearchInput({ className = '', ...props }: SearchInputPro
                 aria-label="Search for a location by city name or coordinates"
                 className="w-full border-none bg-transparent text-xs sm:text-sm text-[#111625] outline-none placeholder:text-slate-400 py-1"
                 placeholder="Search city, region, or coordinates..."
+                maxLength={100}
               />
             </div>
           </Popover.Anchor>

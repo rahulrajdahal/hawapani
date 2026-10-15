@@ -11,11 +11,19 @@ describe("PostHog analytics module", () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
-    delete (window as unknown as { posthog?: unknown }).posthog;
+    vi.stubGlobal("window", {
+      navigator: { doNotTrack: "0" },
+      document: {
+        querySelector: vi.fn().mockReturnValue(null),
+        createElement: vi.fn().mockReturnValue({ setAttribute: vi.fn() }),
+        head: { appendChild: vi.fn() },
+      },
+    });
   });
 
   afterEach(() => {
     process.env.NEXT_PUBLIC_POSTHOG_KEY = originalEnv;
+    vi.unstubAllGlobals();
   });
 
   describe("isDoNotTrackEnabled", () => {
@@ -24,15 +32,15 @@ describe("PostHog analytics module", () => {
     });
 
     it("returns true when navigator.doNotTrack is '1'", () => {
-      Object.defineProperty(window.navigator, "doNotTrack", {
-        value: "1",
-        configurable: true,
+      vi.stubGlobal("window", {
+        navigator: { doNotTrack: "1" },
       });
       expect(isDoNotTrackEnabled()).toBe(true);
-      Object.defineProperty(window.navigator, "doNotTrack", {
-        value: "0",
-        configurable: true,
-      });
+    });
+
+    it("returns false when window is undefined (SSR)", () => {
+      vi.stubGlobal("window", undefined);
+      expect(isDoNotTrackEnabled()).toBe(false);
     });
   });
 
@@ -42,15 +50,15 @@ describe("PostHog analytics module", () => {
     });
 
     it("does not throw and returns false when DNT is enabled", () => {
-      Object.defineProperty(window.navigator, "doNotTrack", {
-        value: "1",
-        configurable: true,
+      vi.stubGlobal("window", {
+        navigator: { doNotTrack: "1" },
       });
       expect(initPostHog()).toBe(false);
-      Object.defineProperty(window.navigator, "doNotTrack", {
-        value: "0",
-        configurable: true,
-      });
+    });
+
+    it("returns false during SSR when window is undefined", () => {
+      vi.stubGlobal("window", undefined);
+      expect(initPostHog()).toBe(false);
     });
   });
 

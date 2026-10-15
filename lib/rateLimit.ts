@@ -14,18 +14,41 @@ interface RateLimitConfig {
 
 const store = new Map<string, RateLimitRecord>();
 
+/** Maximum number of tracked IP keys in memory to prevent exhaustion attacks */
+export const MAX_STORE_SIZE = 5000;
+
 // Periodic garbage collection every 5 minutes to prevent memory leak
 const GC_INTERVAL_MS = 5 * 60 * 1000;
 let lastGc = Date.now();
 
-function cleanupExpiredRecords(now: number) {
-  if (now - lastGc < GC_INTERVAL_MS) return;
+export function cleanupExpiredRecords(now: number, force = false) {
+  if (!force && now - lastGc < GC_INTERVAL_MS) return;
   lastGc = now;
   for (const [key, record] of store.entries()) {
     if (now > record.resetTime) {
       store.delete(key);
     }
   }
+
+  // Evict oldest entries if store still reaches MAX_STORE_SIZE
+  if (store.size >= MAX_STORE_SIZE) {
+    const keysToDelete = Array.from(store.keys()).slice(
+      0,
+      Math.max(1, Math.floor(MAX_STORE_SIZE * 0.2))
+    );
+    for (const key of keysToDelete) {
+      store.delete(key);
+    }
+  }
+}
+
+export function resetRateLimitStore(): void {
+  store.clear();
+  lastGc = Date.now();
+}
+
+export function getRateLimitStoreSize(): number {
+  return store.size;
 }
 
 /**
@@ -34,12 +57,14 @@ function cleanupExpiredRecords(now: number) {
 export function getClientIp(req: NextRequest): string {
   const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) {
-    // Pick the first IP in the chain
-    return forwarded.split(",")[0].trim();
+    // Pick the first IP in the chain and sanitize valid IP characters
+    const ip = forwarded.split(",")[0].trim().replace(/[^0-9a-fA-F:.]/g, "");
+    if (ip) return ip;
   }
   const realIp = req.headers.get("x-real-ip");
   if (realIp) {
-    return realIp.trim();
+    const ip = realIp.trim().replace(/[^0-9a-fA-F:.]/g, "");
+    if (ip) return ip;
   }
   return "127.0.0.1";
 }
@@ -52,7 +77,7 @@ export function checkRateLimit(
   config: RateLimitConfig = { limit: 60, windowMs: 60 * 1000 }
 ) {
   const now = Date.now();
-  cleanupExpiredRecords(now);
+  cleanupExpiredRecords(now, store.size >= MAX_STORE_SIZE);
 
   const existing = store.get(key);
 

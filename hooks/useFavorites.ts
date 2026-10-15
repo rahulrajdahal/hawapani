@@ -115,13 +115,21 @@ export function useFavorites() {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const migrated = migrateLegacyFavorites(parsed);
-          setFavorites(migrated);
-          if (JSON.stringify(migrated) !== stored) {
-            localStorage.setItem(
-              FAVORITES_STORAGE_KEY,
-              JSON.stringify(migrated),
-            );
+          const validStrings = parsed.filter(
+            (item): item is string =>
+              typeof item === "string" &&
+              item.trim().length > 0 &&
+              item.length <= 100,
+          );
+          if (validStrings.length > 0) {
+            const migrated = migrateLegacyFavorites(validStrings);
+            setFavorites(migrated);
+            if (JSON.stringify(migrated) !== stored) {
+              localStorage.setItem(
+                FAVORITES_STORAGE_KEY,
+                JSON.stringify(migrated),
+              );
+            }
           }
         }
       } else {

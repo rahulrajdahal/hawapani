@@ -221,7 +221,7 @@ export default function OfflineGame({
       </div>
 
       {/* Game arena canvas/box */}
-      <div className="relative w-full h-72 sm:h-80 rounded-2xl bg-gradient-to-b from-sky-100 to-blue-50 border border-blue-200/60 overflow-hidden shadow-inner select-none">
+      <div className="relative w-full h-72 sm:h-80 rounded-2xl bg-linear-to-b from-sky-100 to-blue-50 border border-blue-200/60 overflow-hidden shadow-inner select-none">
         {/* Falling elements */}
         {renderObstacles.map((obs) => (
           <div
