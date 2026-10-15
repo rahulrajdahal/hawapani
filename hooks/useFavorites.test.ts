@@ -80,6 +80,10 @@ describe('useFavorites domain logic', () => {
       expect(isFavoriteMatch(favorites, 'Douglas', 'isle of man')).toBe(true);
     });
 
+    it('matches target string that includes country when country parameter is omitted', () => {
+      expect(isFavoriteMatch(favorites, 'Douglas, Isle of Man')).toBe(true);
+    });
+
     it('CRITICAL: NEVER matches "Douglasville" when favorite is "Douglas, Isle of Man"', () => {
       expect(isFavoriteMatch(favorites, 'Douglasville')).toBe(false);
       expect(isFavoriteMatch(favorites, 'Douglasville, USA')).toBe(false);

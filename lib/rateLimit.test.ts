@@ -5,6 +5,8 @@ import {
   createRateLimitResponse,
   cleanupExpiredRecords,
   resetRateLimitStore,
+  getRateLimitStoreSize,
+  MAX_STORE_SIZE,
 } from "./rateLimit";
 import { NextRequest } from "next/server";
 
@@ -38,6 +40,27 @@ describe("rateLimit utility", () => {
         headers: { "x-forwarded-for": "192.168.1.1; injection=true" },
       });
       expect(getClientIp(req)).toBe("192.168.1.1");
+    });
+
+    it("sanitizes space-delimited parameters in IP headers", () => {
+      const req = new NextRequest("http://localhost/api/test", {
+        headers: { "x-forwarded-for": "192.168.1.1 injection=true" },
+      });
+      expect(getClientIp(req)).toBe("192.168.1.1");
+    });
+
+    it("sanitizes x-real-ip header containing parameters", () => {
+      const req = new NextRequest("http://localhost/api/test", {
+        headers: { "x-real-ip": "198.51.100.1; injection=true" },
+      });
+      expect(getClientIp(req)).toBe("198.51.100.1");
+    });
+
+    it("handles valid IPv6 addresses correctly", () => {
+      const req = new NextRequest("http://localhost/api/test", {
+        headers: { "x-forwarded-for": "2001:db8::1, 192.168.1.1" },
+      });
+      expect(getClientIp(req)).toBe("2001:db8::1");
     });
   });
 
@@ -119,6 +142,28 @@ describe("rateLimit utility", () => {
       resetRateLimitStore();
       const fresh = checkRateLimit("persist-ip", { limit: 2, windowMs: 60000 });
       expect(fresh.remaining).toBe(1);
+    });
+
+    it("reports store size via getRateLimitStoreSize", () => {
+      expect(getRateLimitStoreSize()).toBe(0);
+      checkRateLimit("size-ip", { limit: 2, windowMs: 1000 });
+      expect(getRateLimitStoreSize()).toBe(1);
+    });
+
+    it("skips cleanup if called within GC_INTERVAL_MS without force", () => {
+      checkRateLimit("throttle-ip", { limit: 2, windowMs: 1000 });
+      cleanupExpiredRecords(Date.now(), false);
+      expect(getRateLimitStoreSize()).toBe(1);
+    });
+
+    it("evicts oldest records when store reaches MAX_STORE_SIZE", () => {
+      for (let i = 0; i < MAX_STORE_SIZE; i++) {
+        checkRateLimit(`stress-ip-${i}`, { limit: 10, windowMs: 60000 });
+      }
+      expect(getRateLimitStoreSize()).toBe(MAX_STORE_SIZE);
+
+      cleanupExpiredRecords(Date.now(), true);
+      expect(getRateLimitStoreSize()).toBeLessThan(MAX_STORE_SIZE);
     });
   });
 });

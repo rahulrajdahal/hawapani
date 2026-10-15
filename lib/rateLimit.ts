@@ -51,19 +51,26 @@ export function getRateLimitStoreSize(): number {
   return store.size;
 }
 
+function sanitizeIp(raw: string): string | null {
+  const firstEntry = raw.split(/[,;]/)[0]?.trim();
+  if (!firstEntry) return null;
+  const candidate = firstEntry.split(/\s+/)[0];
+  const ip = candidate.replace(/[^0-9a-fA-F:.]/g, "");
+  return ip || null;
+}
+
 /**
  * Extracts a client identifier from NextRequest headers.
  */
 export function getClientIp(req: NextRequest): string {
   const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) {
-    // Pick the first IP in the chain and sanitize valid IP characters
-    const ip = forwarded.split(",")[0].trim().replace(/[^0-9a-fA-F:.]/g, "");
+    const ip = sanitizeIp(forwarded);
     if (ip) return ip;
   }
   const realIp = req.headers.get("x-real-ip");
   if (realIp) {
-    const ip = realIp.trim().replace(/[^0-9a-fA-F:.]/g, "");
+    const ip = sanitizeIp(realIp);
     if (ip) return ip;
   }
   return "127.0.0.1";

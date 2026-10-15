@@ -20,6 +20,14 @@ export const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY || "";
 export const POSTHOG_HOST =
   process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com";
 
+function getPostHogKey(): string {
+  return process.env.NEXT_PUBLIC_POSTHOG_KEY || POSTHOG_KEY;
+}
+
+function getPostHogHost(): string {
+  return process.env.NEXT_PUBLIC_POSTHOG_HOST || POSTHOG_HOST;
+}
+
 /**
  * Checks if user has Do Not Track enabled.
  */
@@ -36,7 +44,8 @@ export function isDoNotTrackEnabled(): boolean {
  */
 export function initPostHog(): boolean {
   if (typeof window === "undefined") return false;
-  if (!POSTHOG_KEY) return false;
+  const key = getPostHogKey();
+  if (!key) return false;
 
   // Respect user's privacy preference
   if (isDoNotTrackEnabled()) {
@@ -54,7 +63,7 @@ export function initPostHog(): boolean {
       const script = document.createElement("script");
       script.setAttribute("data-posthog", "true");
       script.async = true;
-      script.src = `${POSTHOG_HOST}/static/array.js`;
+      script.src = `${getPostHogHost()}/static/array.js`;
       document.head.appendChild(script);
     }
 
@@ -75,7 +84,8 @@ export function captureEvent(
   properties: Record<string, unknown> = {}
 ): void {
   if (typeof window === "undefined") return;
-  if (!POSTHOG_KEY || isDoNotTrackEnabled()) return;
+  const key = getPostHogKey();
+  if (!key || isDoNotTrackEnabled()) return;
 
   try {
     if (window.posthog?.capture) {
